@@ -1472,16 +1472,22 @@ void Disk::appendToInodeListFromBlock(unsigned short int address, unsigned short
 
 	Inode_Address_Structure dir;
 	Inode_Address_Structure nullDir;
+	Inode_Structure temp;
 	nullDir.name[0] = '@';
 	nullDir.address = 0;
-	for (int i = 2; i < BLOCK_SIZE / sizeof(Inode_Address_Structure); i++)
+	for (int i = 0; i < BLOCK_SIZE / sizeof(Inode_Address_Structure); i++)
 	{
 		readFromDisk(address);
 		readFromBlock(reinterpret_cast<char*>(&dir), sizeof(Inode_Address_Structure), sizeof(Inode_Address_Structure)*i);
 		if (dir.name[0] == '@') continue;
+		if (dir.name[0] == '.' && i == 0) continue;
+		if (dir.name[0] == '.'  && i == 1) continue;
+		readInode(dir.address, temp);
+
+		if (temp.protection == 1) deleteFileFromBlock(dir.address);
 		//if there is a dir in ehre then we increase the count of dirs deleted and append the inode address to the list
+		else deleteDir(dir.address);
 		count++;
-		appendToInodeList(dir.address);
 		if (!(writeInodeData(address, nullDir, sizeof(Inode_Address_Structure) * i))) cout << "could not write to Inode Daata" << endl;
 	}
 }
@@ -2016,7 +2022,8 @@ void Disk::deleteFile(unsigned short int address)
 	appendToInodeList(address);
 
 
-}bool Disk::findFile(char name[14], unsigned short int &address)
+}
+bool Disk::findFile(char name[14], unsigned short int &address)
 {
 	bool found = false;
 	Inode_Structure inode;
@@ -2109,4 +2116,170 @@ void Disk::deleteFile(unsigned short int address)
 	writeInode(currentDir, inode);
 	//return that it was found or not
 	return found;
+}void Disk::deleteDir(unsigned short int address)
+{
+
+	Inode_Structure inode;
+
+	unsigned short int inodeTemp = address;
+	unsigned short int inodesDeleted = 1;
+	//read int the cur inode in use
+	readInode(address, inode);
+
+
+	//delete all the dirs in the inode
+	if (inode.direct_address0 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address0, inodesDeleted);
+		appendToFreeList(inode.direct_address0);
+	}
+	if (inode.direct_address1 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address1, inodesDeleted);
+		appendToFreeList(inode.direct_address1);
+	}
+	if (inode.direct_address2 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address2, inodesDeleted);
+		appendToFreeList(inode.direct_address2);
+	}
+	if (inode.direct_address3 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address3, inodesDeleted);
+		appendToFreeList(inode.direct_address3);
+	}
+	if (inode.direct_address4 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address4, inodesDeleted);
+		appendToFreeList(inode.direct_address4);
+	}
+	if (inode.direct_address5 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address5, inodesDeleted);
+		appendToFreeList(inode.direct_address5);
+	}
+	if (inode.direct_address6 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address6, inodesDeleted);
+		appendToFreeList(inode.direct_address6);
+	}
+	if (inode.direct_address7 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address7, inodesDeleted);
+		appendToFreeList(inode.direct_address7);
+	}
+	if (inode.direct_address8 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address8, inodesDeleted);
+		appendToFreeList(inode.direct_address8);
+	}
+	if (inode.direct_address9 != 0)
+	{
+		appendToInodeListFromBlock(inode.direct_address9, inodesDeleted);
+		appendToFreeList(inode.direct_address9);
+	}
+	if (inode.indirect_address != 0)
+	{
+		Block_Address_Structure temp;
+
+		for (int i = 0; i < BLOCK_SIZE / sizeof(Block_Address_Structure); i++)
+		{
+
+			readFromDisk(inode.indirect_address);
+			readFromBlock(reinterpret_cast<char*>(&temp), sizeof(Block_Address_Structure), sizeof(Block_Address_Structure)* i);
+			if (temp.address == 0) break;
+
+
+			appendToInodeListFromBlock(temp.address, inodesDeleted);
+			appendToFreeList(temp.address);
+		}
+
+		appendToFreeList(inode.indirect_address);
+	}
+	appendToInodeList(inodeTemp);
+	updateInfoBlock();
+}
+
+void Disk::deleteFileFromBlock(unsigned short int address)
+{
+
+	Inode_Structure inode;
+
+
+	//read int the cur inode in use
+	readInode(address, inode);
+
+	//delete all the blocks in the Inode and append to the free list
+	if (inode.direct_address0 != 0)
+	{
+
+		appendToFreeList(inode.direct_address0);
+	}
+	if (inode.direct_address1 != 0)
+	{
+
+		appendToFreeList(inode.direct_address1);
+	}
+	if (inode.direct_address2 != 0)
+	{
+
+		appendToFreeList(inode.direct_address2);
+	}
+	if (inode.direct_address3 != 0)
+	{
+
+		appendToFreeList(inode.direct_address3);
+	}
+	if (inode.direct_address4 != 0)
+	{
+
+		appendToFreeList(inode.direct_address4);
+	}
+	if (inode.direct_address5 != 0)
+	{
+
+		appendToFreeList(inode.direct_address5);
+	}
+	if (inode.direct_address6 != 0)
+	{
+
+		appendToFreeList(inode.direct_address6);
+	}
+	if (inode.direct_address7 != 0)
+	{
+
+		appendToFreeList(inode.direct_address7);
+	}
+	if (inode.direct_address8 != 0)
+	{
+
+		appendToFreeList(inode.direct_address8);
+	}
+	if (inode.direct_address9 != 0)
+	{
+		appendToFreeList(inode.direct_address9);
+	}
+	if (inode.indirect_address != 0)
+	{
+		Block_Address_Structure temp;
+
+		for (int i = 0; i < BLOCK_SIZE / sizeof(Block_Address_Structure); i++)
+		{
+
+			readFromDisk(inode.indirect_address);
+			readFromBlock(reinterpret_cast<char*>(&temp), sizeof(Block_Address_Structure), sizeof(Block_Address_Structure)* i);
+			if (temp.address == 0) break;
+
+			appendToFreeList(temp.address);
+		}
+
+		appendToFreeList(inode.indirect_address);
+	}
+
+
+
+	//append the inode address to the inode free list
+	appendToInodeList(address);
+
+
 }

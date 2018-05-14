@@ -82,6 +82,8 @@ public:
 	//create a dir
 	bool createDir(char[14]);
 	void deleteCurrentDir();
+	void deleteDir(unsigned short int );
+	void deleteFileFromBlock(unsigned short int);
 private:
 
 	void appendToCurrentDir(Inode_Address_Structure &);

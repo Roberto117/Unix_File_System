@@ -46,9 +46,9 @@ int main()
 
 	unsigned short int a;
 
-	/*
-	//only do this to reset everything
 	
+	//only do this to reset everything
+	/*
 	disk->reset();
 
 	disk->createDir(name);
@@ -102,11 +102,6 @@ int main()
 
 
 	//disk->printAllFreeBlocks();
-
-
-
-
-
 }
 
 bool getCommand()
@@ -134,13 +129,14 @@ bool getCommand()
 	//the user wants to move to a dir somwhere in disk
 	else if (command == moveDir)
 	{
+		
 		//check if we must go deeper in the tree
 		bool more = true;
 
 		unsigned short int address;
 		while (more)
 		{
-
+			char name[14] = { 0 };
 			for (int i = 0; i < 14; i++)
 			{
 				//reached the end of the command
@@ -163,7 +159,12 @@ bool getCommand()
 
 			//find the dir in the current dir
 			if (!disk->findDir(name, address))
+			{
 				cout << "No such directory" << endl;
+				more = false;
+
+			}
+				
 			//move to the dir
 			else disk->moveToDir(address);
 
